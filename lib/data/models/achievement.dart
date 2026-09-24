@@ -110,6 +110,7 @@ class Achievement {
   /// Get progress percentage
   double get progressPercent {
     if (isUnlocked) return 100.0;
+    if (targetValue <= 0) return 0.0;
     return (currentProgress / targetValue * 100).clamp(0.0, 100.0);
   }
 
@@ -141,6 +142,7 @@ class Achievement {
   /// Create a copy with updated fields
   Achievement copyWith({
     DateTime? unlockedAt,
+    bool clearUnlockedAt = false,
     bool? isUnlocked,
     int? currentProgress,
   }) {
@@ -152,7 +154,7 @@ class Achievement {
       tierIndex: tierIndex,
       typeIndex: typeIndex,
       targetValue: targetValue,
-      unlockedAt: unlockedAt ?? this.unlockedAt,
+      unlockedAt: clearUnlockedAt ? null : unlockedAt ?? this.unlockedAt,
       isUnlocked: isUnlocked ?? this.isUnlocked,
       currentProgress: currentProgress ?? this.currentProgress,
     );

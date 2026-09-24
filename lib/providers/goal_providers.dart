@@ -108,4 +108,9 @@ class GoalNotifier extends StateNotifier<List<MoodGoal>> {
   void refresh() {
     state = _repo.getAllGoals();
   }
+
+  Future<void> resetGoals() async {
+    await _repo.resetGoals();
+    state = _repo.getAllGoals();
+  }
 }

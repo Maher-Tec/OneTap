@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:onetap/data/repositories/journal_repository.dart';
@@ -40,7 +41,12 @@ class TodayEntryNotifier extends StateNotifier<MoodEntry?> {
     
     // Check for streak milestone and show notification
     final streak = _repo.calculateStreak();
-    await _notificationService.showStreakMilestone(streak);
+    try {
+      await _notificationService.showStreakMilestone(streak);
+    } catch (error) {
+      // A notification failure must not make a successfully saved entry fail.
+      debugPrint('Could not show streak notification: $error');
+    }
   }
 
   /// Refresh from storage
@@ -167,6 +173,11 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   Future<void> resetAll() async {
     await _repo.resetAll();
     state = _repo.getSettings();
+    if (state.reminderEnabled) {
+      await _notificationService.scheduleDailyReminder(state.reminderTime);
+    } else {
+      await _notificationService.cancelDailyReminder();
+    }
   }
 
   /// Refresh from storage
@@ -174,12 +185,6 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     state = _repo.getSettings();
   }
 }
-
-/// Provider for CSV export
-final exportCsvProvider = Provider<String>((ref) {
-  final repo = ref.watch(journalRepositoryProvider);
-  return repo.exportToCsv();
-});
 
 // ==================== ANALYTICS PROVIDERS ====================
 

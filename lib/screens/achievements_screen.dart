@@ -45,6 +45,10 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen>
       curve: Curves.easeOutCubic,
     );
     _fadeController.forward();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(achievementNotifierProvider.notifier).checkAndUnlock();
+    });
   }
 
   @override
@@ -559,16 +563,5 @@ class _AchievementCard extends StatelessWidget {
       case AchievementTier.diamond:
         return const Color(0xFFB9F2FF);
     }
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
-
-    if (diff.inDays == 0) return 'Today';
-    if (diff.inDays == 1) return 'Yesterday';
-    if (diff.inDays < 7) return '${diff.inDays} days ago';
-    if (diff.inDays < 30) return '${(diff.inDays / 7).floor()} weeks ago';
-    return '${date.month}/${date.day}/${date.year}';
   }
 }

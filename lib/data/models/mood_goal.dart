@@ -55,7 +55,10 @@ class MoodGoal {
 
   /// Get target moods as MoodLevel list
   List<MoodLevel> get targetMoods {
-    return targetMoodIndices.map((i) => MoodLevel.values[i]).toList();
+    return targetMoodIndices
+        .where((i) => i >= 0 && i < MoodLevel.values.length)
+        .map((i) => MoodLevel.values[i])
+        .toList();
   }
 
   /// Check if a mood counts toward this goal
@@ -76,7 +79,9 @@ class MoodGoal {
   String get typeLabel {
     if (targetMoodIndices.contains(0) && targetMoodIndices.contains(1)) {
       return 'Positive Days';
-    } else if (targetMoodIndices.length == 1) {
+    } else if (targetMoodIndices.length == 1 &&
+        targetMoodIndices.first >= 0 &&
+        targetMoodIndices.first < MoodLevel.values.length) {
       return MoodLevel.values[targetMoodIndices.first].label;
     }
     return 'Custom Goal';
@@ -99,7 +104,7 @@ class GoalTemplates {
     return MoodGoal.create(
       name: '$targetDays Positive Days',
       targetDaysPerMonth: targetDays,
-      targetMoods: [MoodLevel.great, MoodLevel.good],
+      targetMoods: [MoodLevel.great, MoodLevel.good, MoodLevel.inLove],
     );
   }
 
@@ -107,7 +112,7 @@ class GoalTemplates {
     return MoodGoal.create(
       name: '$targetDays Great Days',
       targetDaysPerMonth: targetDays,
-      targetMoods: [MoodLevel.great],
+      targetMoods: [MoodLevel.great, MoodLevel.inLove],
     );
   }
 

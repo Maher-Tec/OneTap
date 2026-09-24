@@ -16,26 +16,9 @@ class TrendDataPoint {
   factory TrendDataPoint.fromMood(DateTime date, MoodLevel mood) {
     return TrendDataPoint(
       date: date,
-      value: _moodToValue(mood),
+      value: mood.score,
       mood: mood,
     );
-  }
-
-  static double _moodToValue(MoodLevel mood) {
-    switch (mood) {
-      case MoodLevel.great:
-        return 4.0;
-      case MoodLevel.good:
-        return 3.0;
-      case MoodLevel.okay:
-        return 2.0;
-      case MoodLevel.meh:
-        return 1.0;
-      case MoodLevel.bad:
-        return 0.0;
-      case MoodLevel.inLove:
-        return 4.0; // Same as great - positive mood
-    }
   }
 }
 

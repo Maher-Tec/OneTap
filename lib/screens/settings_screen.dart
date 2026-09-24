@@ -1,10 +1,11 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:onetap/core/constants/app_colors.dart';
 import 'package:onetap/core/constants/app_strings.dart';
 import 'package:onetap/core/utils/haptic_utils.dart';
 import 'package:onetap/providers/journal_providers.dart';
+import 'package:onetap/providers/goal_providers.dart';
+import 'package:onetap/providers/achievement_providers.dart';
 import 'package:onetap/widgets/animated_gradient_background.dart';
 import 'package:onetap/widgets/premium_effects.dart';
 import 'package:onetap/widgets/floating_particles.dart';
@@ -154,17 +155,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             child: Column(
                               children: [
                                 _SettingsTile(
-                                  title: AppStrings.exportJournal,
-                                  icon: Icons.download_outlined,
-                                  textColor: textColor,
-                                  onTap: () => _exportData(context),
-                                  trailing: Icon(
-                                    Icons.chevron_right_rounded,
-                                    color: textColor.withValues(alpha: 0.5),
-                                  ),
-                                ),
-                                const _Divider(),
-                                _SettingsTile(
                                   title: AppStrings.resetAll,
                                   icon: Icons.delete_outline,
                                   textColor: Colors.redAccent,
@@ -292,18 +282,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     }
   }
 
-  Future<void> _exportData(BuildContext context) async {
-    HapticUtils.gentle();
-    final csv = ref.read(exportCsvProvider);
-    
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => _ExportSheet(csv: csv),
-    );
-  }
-
   Future<void> _showResetConfirmation(BuildContext context) async {
     HapticUtils.gentle();
     final confirmed = await showModalBottomSheet<bool>(
@@ -315,6 +293,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
     if (confirmed == true) {
       await ref.read(settingsProvider.notifier).resetAll();
+      await ref.read(goalNotifierProvider.notifier).resetGoals();
+      await ref.read(achievementNotifierProvider.notifier).resetProgress();
       ref.read(todayEntryProvider.notifier).refresh();
       
       if (context.mounted) {
@@ -328,7 +308,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 child: child,
               );
             },
-            transitionDuration: const Duration(milliseconds: 400),
+            transitionDuration: const Duration(milliseconds: 240),
           ),
           (route) => false,
         );
@@ -339,7 +319,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
 class _SettingsTile extends StatefulWidget {
   final String title;
-  final String? subtitle;
   final IconData icon;
   final Color textColor;
   final Widget? trailing;
@@ -347,7 +326,6 @@ class _SettingsTile extends StatefulWidget {
 
   const _SettingsTile({
     required this.title,
-    this.subtitle,
     required this.icon,
     required this.textColor,
     this.trailing,
@@ -395,28 +373,13 @@ class _SettingsTileState extends State<_SettingsTile> {
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: widget.textColor,
-                    ),
-                  ),
-                  if (widget.subtitle != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      widget.subtitle!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: widget.textColor.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ],
-                ],
+              child: Text(
+                widget.title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: widget.textColor,
+                ),
               ),
             ),
             if (widget.trailing != null) widget.trailing!,
@@ -580,111 +543,6 @@ class _Divider extends StatelessWidget {
       height: 1,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       color: Colors.white.withValues(alpha: 0.1),
-    );
-  }
-}
-
-class _ExportSheet extends StatelessWidget {
-  final String csv;
-
-  const _ExportSheet({required this.csv});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.6,
-      ),
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  const Icon(Icons.download_outlined, size: 24),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Export Data',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // CSV content
-            Flexible(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: SingleChildScrollView(
-                  child: SelectableText(
-                    csv,
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 11,
-                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Close button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text('Close'),
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
     );
   }
 }

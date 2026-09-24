@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:onetap/core/theme/app_theme.dart';
 import 'package:onetap/core/services/notification_service.dart';
 import 'package:onetap/data/repositories/journal_repository.dart';
 import 'package:onetap/data/repositories/goal_repository.dart';
 import 'package:onetap/data/repositories/achievement_repository.dart';
+import 'package:onetap/data/demo/demo_data_seeder.dart';
 import 'package:onetap/providers/journal_providers.dart';
 import 'package:onetap/providers/goal_providers.dart';
 import 'package:onetap/providers/achievement_providers.dart';
-import 'package:onetap/screens/intro_screen.dart';
+import 'package:onetap/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Load environment variables for AI APIs
-  await dotenv.load(fileName: '.env');
   
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -38,6 +35,10 @@ void main() async {
 
   // Initialize Hive and repositories
   final journalRepo = await JournalRepository.initialize();
+  const demoMode = bool.fromEnvironment('ONETAP_DEMO_MODE');
+  if (demoMode) {
+    await DemoDataSeeder.seedIfEmpty(journalRepo.entriesBox);
+  }
   final goalRepo = await GoalRepository.initialize(journalRepo.entriesBox);
   final achievementRepo = await AchievementRepository.initialize(
     entriesBox: journalRepo.entriesBox,
@@ -80,7 +81,7 @@ class OneTapApp extends ConsumerWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.dark, // Always dark mode as requested
-      home: const IntroScreen(),
+      home: const HomeScreen(),
     );
   }
 }

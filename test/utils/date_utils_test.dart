@@ -68,21 +68,20 @@ void main() {
       expect(last30.length, 30);
     });
 
-    test('getLastNDays returns dates in reverse chronological order', () {
+    test('getLastNDays returns dates in chronological order ending with today', () {
       final days = app_date.DateUtils.getLastNDays(3);
       
-      expect(days[0].isAfter(days[1]), true);
-      expect(days[1].isAfter(days[2]), true);
+      expect(days[1].isAfter(days[0]), true);
+      expect(days[2].isAfter(days[1]), true);
     });
 
-    test('getLastNDays first element is approximately today', () {
-      final days = app_date.DateUtils.getLastNDays(1);
+    test('getLastNDays last element is today', () {
+      final days = app_date.DateUtils.getLastNDays(7);
       final today = DateTime.now();
       
-      // Should be same day (comparing only year, month, day)
-      expect(days[0].year, today.year);
-      expect(days[0].month, today.month);
-      expect(days[0].day, today.day);
+      expect(days.last.year, today.year);
+      expect(days.last.month, today.month);
+      expect(days.last.day, today.day);
     });
 
     test('formatMonthYear returns formatted string', () {

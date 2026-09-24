@@ -1,7 +1,5 @@
-import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:onetap/core/constants/app_colors.dart';
@@ -124,35 +122,38 @@ class _ConfirmationScreenState extends ConsumerState<ConfirmationScreen>
 
   Future<void> _startAnimations() async {
     await Future.delayed(const Duration(milliseconds: 100));
+    if (!mounted) return;
     
     // Checkmark
     _checkmarkController.forward();
     HapticUtils.success();
     
     await Future.delayed(const Duration(milliseconds: 250));
+    if (!mounted) return;
     
     // Emoji bounce
     _emojiController.forward();
     
     await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
     
     // Lock click
     _lockController.forward();
     HapticUtils.lockClick();
     
     await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
     
     // Content
     _contentController.forward();
     
     await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
     
     // Confetti
-    if (mounted) {
-      _generateConfetti();
-      setState(() => _showConfetti = true);
-      _confettiController.forward();
-    }
+    _generateConfetti();
+    setState(() => _showConfetti = true);
+    _confettiController.forward();
   }
   
   void _generateConfetti() {
@@ -472,7 +473,7 @@ class _ConfirmationScreenState extends ConsumerState<ConfirmationScreen>
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 400),
+        transitionDuration: const Duration(milliseconds: 240),
       ),
       (route) => false,
     );
@@ -496,7 +497,7 @@ class _ConfirmationScreenState extends ConsumerState<ConfirmationScreen>
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 400),
+        transitionDuration: const Duration(milliseconds: 240),
       ),
       (route) => false,
     );

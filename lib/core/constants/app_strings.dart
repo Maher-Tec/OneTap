@@ -69,7 +69,6 @@ class AppStrings {
   static const String graceAvailable = 'Grace available';
   static const String graceHint = '1 free pass per week';
   static const String data = 'Data';
-  static const String exportJournal = 'Export journal';
   static const String resetAll = 'Reset all data';
   static const String resetConfirmTitle = 'Reset Journal?';
   static const String resetConfirmMessage = 'This will delete all your entries and cannot be undone.';
@@ -128,9 +127,33 @@ class AppStrings {
     '"Tomorrow is another chance." — Unknown',
   ];
 
+  static const Map<String, List<String>> _moodWords = {
+    'great': ['You deserve to enjoy this moment.', 'Let yourself celebrate the good.', 'Keep a little of this joy with you.'],
+    'good': ['Notice what is helping today.', 'Small good moments still count.', 'You are allowed to feel good.'],
+    'okay': ['You do not have to feel amazing to be doing well.', 'Taking today as it comes is enough.', 'Steady is still progress.'],
+    'meh': ['A hard feeling is not the whole story.', 'Be patient with yourself today.', 'You can take this one small step at a time.'],
+    'bad': ['You deserve kindness, especially from yourself.', 'You do not have to solve everything right now.', 'Getting through this moment is enough.'],
+    'inLove': ['Let yourself be present with the love you feel.', 'Hold on to what makes your heart feel full.', 'Love makes ordinary moments brighter.'],
+  };
+
   /// Get a quote based on the day of year (consistent for the day)
   static String getDailyQuote() {
-    final dayOfYear = DateTime.now().difference(DateTime(DateTime.now().year, 1, 1)).inDays;
+    final now = DateTime.now();
+    final dayOfYear = now.difference(DateTime(now.year, 1, 1)).inDays;
     return _dailyQuotes[dayOfYear % _dailyQuotes.length];
+  }
+
+  /// Get one locally stored supportive message for a mood, stable for the day.
+  static String getMoodMessage(String moodName) {
+    final messages = _moodWords[moodName] ?? _dailyQuotes;
+    final now = DateTime.now();
+    final dayOfYear = now.difference(DateTime(now.year, 1, 1)).inDays;
+    return messages[dayOfYear % messages.length];
+  }
+
+  static String getBestDayMessage(String dayName, double averageMood) {
+    if (averageMood >= 3.5) return '$dayName is often a bright spot in your week.';
+    if (averageMood >= 2.5) return '$dayName tends to feel steady for you.';
+    return 'You have been showing up for yourself on $dayName.';
   }
 }

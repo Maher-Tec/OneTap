@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +7,8 @@ import 'package:onetap/core/constants/app_strings.dart';
 import 'package:onetap/core/constants/mood_level.dart';
 import 'package:onetap/core/utils/haptic_utils.dart';
 import 'package:onetap/providers/journal_providers.dart';
+import 'package:onetap/providers/achievement_providers.dart';
+import 'package:onetap/providers/goal_providers.dart';
 import 'package:onetap/widgets/animated_gradient_background.dart';
 import 'package:onetap/widgets/floating_particles.dart';
 import 'package:onetap/widgets/glassmorphic_card.dart';
@@ -423,34 +424,49 @@ class _NoteScreenState extends ConsumerState<NoteScreen>
     final trimmedNote = note?.trim();
     final finalNote = (trimmedNote?.isEmpty ?? true) ? null : trimmedNote;
     
-    // Save entry
-    await ref.read(todayEntryProvider.notifier).saveEntry(
-      widget.selectedMood,
-      note: finalNote,
-    );
-
-    if (mounted) {
-      // Navigate to confirmation with smooth transition
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              ConfirmationScreen(
-            mood: widget.selectedMood,
-            note: finalNote,
-          ),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              ),
-              child: child,
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 400),
-        ),
+    try {
+      await ref.read(todayEntryProvider.notifier).saveEntry(
+        widget.selectedMood,
+        note: finalNote,
       );
+    } catch (error, stackTrace) {
+      debugPrint('Could not save mood entry: $error\n$stackTrace');
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save your entry. Please try again.')),
+        );
+      }
+      return;
     }
+
+    try {
+      await ref.read(achievementNotifierProvider.notifier).checkAndUnlock();
+      await ref.read(goalNotifierProvider.notifier).checkAndCompleteGoals();
+    } catch (error, stackTrace) {
+      debugPrint('Could not update achievement or goal progress: $error\n$stackTrace');
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ConfirmationScreen(
+          mood: widget.selectedMood,
+          note: finalNote,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            ),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 240),
+      ),
+    );
   }
 }
 

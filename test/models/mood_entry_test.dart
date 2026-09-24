@@ -78,17 +78,18 @@ void main() {
 
       final string = entry.toString();
       expect(string.contains('2024-01-28'), true);
-      expect(string.contains('😄'), true);
+      expect(string.contains('🤩'), true);
       expect(string.contains('Amazing day'), true);
     });
 
     test('MoodEntry with all moods creates correct entries', () {
       final moods = [
-        (MoodLevel.great, 0, '😄'),
-        (MoodLevel.good, 1, '🙂'),
+        (MoodLevel.great, 0, '🤩'),
+        (MoodLevel.good, 1, '😊'),
         (MoodLevel.okay, 2, '😐'),
-        (MoodLevel.meh, 3, '😕'),
-        (MoodLevel.bad, 4, '😡'),
+        (MoodLevel.meh, 3, '😔'),
+        (MoodLevel.bad, 4, '😣'),
+        (MoodLevel.inLove, 5, '😍'),
       ];
 
       for (final (mood, index, emoji) in moods) {

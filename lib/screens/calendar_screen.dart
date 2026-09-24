@@ -297,7 +297,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 350),
+        transitionDuration: const Duration(milliseconds: 240),
       ),
       (route) => false,
     );

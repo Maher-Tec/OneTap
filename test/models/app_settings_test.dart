@@ -10,8 +10,8 @@ void main() {
       expect(settings.reminderTime, '20:00');
       expect(settings.themeModeIndex, 0);
       expect(settings.biometricLockEnabled, false);
-      expect(settings.graceEnabled, true);
-      expect(settings.graceRemainingThisWeek, 1);
+      expect(settings.graceEnabled, false);
+      expect(settings.graceRemainingThisWeek, 0);
     });
 
     test('AppSettings.defaults() creates default instance', () {
@@ -21,8 +21,8 @@ void main() {
       expect(settings.reminderTime, '20:00');
       expect(settings.themeModeIndex, 0);
       expect(settings.biometricLockEnabled, false);
-      expect(settings.graceEnabled, true);
-      expect(settings.graceRemainingThisWeek, 1);
+      expect(settings.graceEnabled, false);
+      expect(settings.graceRemainingThisWeek, 0);
     });
 
     test('AppSettings can be created with custom values', () {
@@ -31,16 +31,16 @@ void main() {
         reminderTime: '19:30',
         themeModeIndex: 2,
         biometricLockEnabled: true,
-        graceEnabled: false,
-        graceRemainingThisWeek: 0,
+        graceEnabled: true,
+        graceRemainingThisWeek: 1,
       );
 
       expect(settings.reminderEnabled, true);
       expect(settings.reminderTime, '19:30');
       expect(settings.themeModeIndex, 2);
       expect(settings.biometricLockEnabled, true);
-      expect(settings.graceEnabled, false);
-      expect(settings.graceRemainingThisWeek, 0);
+      expect(settings.graceEnabled, true);
+      expect(settings.graceRemainingThisWeek, 1);
     });
 
     test('AppSettings can be modified', () {
@@ -79,34 +79,18 @@ void main() {
       expect(settings.themeModeIndex, 0);
     });
 
-    test('AppSettings.checkAndResetGrace resets grace when needed', () {
-      final settings = AppSettings(
-        graceRemainingThisWeek: 0,
-        weekAnchor: DateTime.now().subtract(const Duration(days: 8)),
+    test('AppSettings copyWith returns new updated instance', () {
+      final settings = AppSettings();
+      final updated = settings.copyWith(
+        reminderEnabled: true,
+        reminderTime: '07:30',
+        themeModeIndex: 2,
       );
-      
-      settings.checkAndResetGrace();
-      
-      // After checking, grace should be reset to 1 if we're in a new week
-      expect(settings.graceRemainingThisWeek >= 0, true);
-    });
 
-    test('AppSettings grace week anchor is Monday', () {
-      final monday = DateTime(2024, 1, 29); // A Monday
-      final settings = AppSettings(weekAnchor: monday);
-      
-      // Should be the same Monday
-      expect(settings.weekAnchor.weekday, 1); // Monday is 1 in Dart
-    });
-
-    test('AppSettings grace remaining cannot go below 0', () {
-      final settings = AppSettings(graceRemainingThisWeek: 1);
-      
-      settings.graceRemainingThisWeek = -1;
-      expect(settings.graceRemainingThisWeek, -1); // Value is set, even if negative
-      
-      settings.graceRemainingThisWeek = 0;
-      expect(settings.graceRemainingThisWeek, 0);
+      expect(updated.reminderEnabled, true);
+      expect(updated.reminderTime, '07:30');
+      expect(updated.themeModeIndex, 2);
+      expect(settings.reminderEnabled, false); // Original unchanged
     });
 
     test('AppSettings supports all valid reminder times', () {

@@ -35,6 +35,14 @@ class _MoodGalaxyState extends State<MoodGalaxy> with SingleTickerProviderStateM
     _generateGalaxy();
   }
 
+  @override
+  void didUpdateWidget(MoodGalaxy oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.entries != widget.entries || oldWidget.size != widget.size) {
+      _generateGalaxy();
+    }
+  }
+
   void _generateGalaxy() {
     _stars.clear();
     if (widget.entries.isEmpty) return;

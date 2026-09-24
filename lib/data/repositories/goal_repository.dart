@@ -1,7 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:onetap/data/models/mood_goal.dart';
 import 'package:onetap/data/models/mood_entry.dart';
-import 'package:onetap/core/constants/mood_level.dart';
 import 'package:onetap/core/utils/date_utils.dart' as app_date;
 
 /// Repository for managing mood goals
@@ -64,6 +63,10 @@ class GoalRepository {
     await _goalsBox.delete(id);
   }
 
+  Future<void> resetGoals() async {
+    await _goalsBox.clear();
+  }
+
   // ==================== PROGRESS ====================
 
   /// Calculate progress for a goal (current month)
@@ -99,8 +102,14 @@ class GoalRepository {
     final isComplete = qualifyingDays >= goal.targetDaysPerMonth;
 
     // Calculate days remaining in month
-    final lastDayOfMonth = DateTime(targetYear, targetMonth, daysInMonth);
-    final daysRemaining = lastDayOfMonth.difference(now).inDays.clamp(0, daysInMonth);
+    final int daysRemaining;
+    if (targetYear == now.year && targetMonth == now.month) {
+      daysRemaining = (daysInMonth - now.day).clamp(0, daysInMonth);
+    } else if (DateTime(targetYear, targetMonth).isAfter(now)) {
+      daysRemaining = daysInMonth;
+    } else {
+      daysRemaining = 0;
+    }
     final daysNeeded = (goal.targetDaysPerMonth - qualifyingDays).clamp(0, goal.targetDaysPerMonth);
 
     return GoalProgress(

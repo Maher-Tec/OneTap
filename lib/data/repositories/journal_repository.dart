@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:onetap/data/models/mood_entry.dart';
 import 'package:onetap/data/models/app_settings.dart';
@@ -95,34 +96,36 @@ class JournalRepository {
 
   // ==================== STREAK ====================
 
-  /// Calculate current streak with optional grace support
+  /// Calculate current streak
   int calculateStreak() {
-   /// Calculate current streak
-  int streak = 0;
-  DateTime checkDate = DateTime.now();
-  
-  // Check if today has entry
-  if (hasTodayEntry()) {
-    streak = 1;
-    checkDate = checkDate.subtract(const Duration(days: 1));
-  }
-  
-  // Go backwards checking each day
-  while (true) {
-    final entry = getEntry(checkDate);
-    if (entry != null) {
-      streak++;
-      checkDate = checkDate.subtract(const Duration(days: 1));
+    int streak = 0;
+    DateTime checkDate = DateTime.now();
+    
+    // Check if today has entry
+    if (hasTodayEntry()) {
+      streak = 1;
+      checkDate = DateTime(checkDate.year, checkDate.month, checkDate.day - 1);
     } else {
-      // Streak broken
-      break;
+      // If no entry today yet, check starting from yesterday so streak is not lost
+      checkDate = DateTime(checkDate.year, checkDate.month, checkDate.day - 1);
     }
-  }
+    
+    // Go backwards checking each day
+    while (true) {
+      final entry = getEntry(checkDate);
+      if (entry != null) {
+        streak++;
+        checkDate = DateTime(checkDate.year, checkDate.month, checkDate.day - 1);
+      } else {
+        // Streak broken
+        break;
+      }
+    }
     
     return streak;
   }
 
-  /// Calculate the longest streak ever
+  /// Calculate the longest streak ever (DST safe)
   int calculateLongestStreak() {
     final allEntries = getAllEntries();
     if (allEntries.isEmpty) return 0;
@@ -136,14 +139,16 @@ class JournalRepository {
     for (int i = 1; i < allEntries.length; i++) {
       final prevDate = app_date.DateUtils.fromDateKey(allEntries[i - 1].dateKey);
       final currDate = app_date.DateUtils.fromDateKey(allEntries[i].dateKey);
-      final diff = currDate.difference(prevDate).inDays;
+      final diff = DateTime.utc(currDate.year, currDate.month, currDate.day)
+          .difference(DateTime.utc(prevDate.year, prevDate.month, prevDate.day))
+          .inDays;
       
       if (diff == 1) {
         currentStreak++;
         if (currentStreak > longestStreak) {
           longestStreak = currentStreak;
         }
-      } else {
+      } else if (diff > 1) {
         currentStreak = 1;
       }
     }
@@ -193,7 +198,7 @@ class JournalRepository {
     return mostCommon;
   }
 
-  /// Count days with mood >= good (great or good)
+  /// Count days with positive mood (great, good, or inLove)
   int countPositiveDays({int? year, int? month}) {
     List<MoodEntry> entries;
     
@@ -203,9 +208,7 @@ class JournalRepository {
       entries = getAllEntries();
     }
     
-    return entries.where((e) => 
-      e.mood == MoodLevel.great || e.mood == MoodLevel.good
-    ).length;
+    return entries.where((e) => e.mood.isPositive).length;
   }
 
   // ==================== ADVANCED ANALYTICS ====================
@@ -239,7 +242,7 @@ class JournalRepository {
     }
     
     // Group entries by day of week
-    final dayGroups = <int, List<int>>{};
+    final dayGroups = <int, List<double>>{};
     for (int i = 1; i <= 7; i++) {
       dayGroups[i] = [];
     }
@@ -247,7 +250,7 @@ class JournalRepository {
     for (final entry in entries) {
       final date = app_date.DateUtils.fromDateKey(entry.dateKey);
       final dayOfWeek = date.weekday; // 1=Mon, 7=Sun
-      dayGroups[dayOfWeek]!.add(entry.moodIndex);
+      dayGroups[dayOfWeek]!.add(entry.mood.score);
     }
     
     // Calculate averages
@@ -255,11 +258,9 @@ class JournalRepository {
     for (int day = 1; day <= 7; day++) {
       final moods = dayGroups[day]!;
       final avg = moods.isEmpty ? 0.0 : moods.reduce((a, b) => a + b) / moods.length;
-      // Convert moodIndex (0-4) to value where 4=great, 0=awful
-      final value = moods.isEmpty ? 0.0 : (4.0 - avg);
       result.add(DayOfWeekStats(
         dayIndex: day,
-        averageMood: value,
+        averageMood: avg,
         entryCount: moods.length,
       ));
     }
@@ -278,17 +279,17 @@ class JournalRepository {
     }
     
     // Group by hour
-    final hourGroups = <int, List<int>>{};
+    final hourGroups = <int, List<double>>{};
     for (int i = 0; i < 24; i++) {
       hourGroups[i] = [];
     }
     
     for (final entry in entries) {
       final hour = entry.createdAt.hour;
-      hourGroups[hour]!.add(entry.moodIndex);
+      hourGroups[hour]!.add(entry.mood.score);
     }
     
-    // Calculate averages (convert to 0-4 scale where 4=great)
+    // Calculate averages (0.0 to 4.0 scale where 4=great)
     final result = <int, double>{};
     for (int hour = 0; hour < 24; hour++) {
       final moods = hourGroups[hour]!;
@@ -296,7 +297,7 @@ class JournalRepository {
         result[hour] = 0.0;
       } else {
         final avg = moods.reduce((a, b) => a + b) / moods.length;
-        result[hour] = 4.0 - avg; // Convert so 4=great, 0=awful
+        result[hour] = avg;
       }
     }
     
@@ -306,7 +307,8 @@ class JournalRepository {
   /// Get weekly summary
   WeeklySummary getWeeklySummary() {
     final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+    final weekStart = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
     
     // This week's entries
     final thisWeekEntries = <MoodEntry>[];
@@ -333,14 +335,14 @@ class JournalRepository {
     // Calculate averages
     double thisWeekAvg = 0.0;
     if (thisWeekEntries.isNotEmpty) {
-      final sum = thisWeekEntries.fold<int>(0, (sum, e) => sum + e.moodIndex);
-      thisWeekAvg = 4.0 - (sum / thisWeekEntries.length); // 4=great, 0=awful
+      final sum = thisWeekEntries.fold<double>(0.0, (sum, e) => sum + e.mood.score);
+      thisWeekAvg = sum / thisWeekEntries.length;
     }
     
     double lastWeekAvg = 0.0;
     if (lastWeekEntries.isNotEmpty) {
-      final sum = lastWeekEntries.fold<int>(0, (sum, e) => sum + e.moodIndex);
-      lastWeekAvg = 4.0 - (sum / lastWeekEntries.length);
+      final sum = lastWeekEntries.fold<double>(0.0, (sum, e) => sum + e.mood.score);
+      lastWeekAvg = sum / lastWeekEntries.length;
     }
     
     // Calculate week over week change
@@ -350,14 +352,28 @@ class JournalRepository {
     }
     
     // Count positive days
-    final positiveDays = thisWeekEntries.where((e) => 
-      e.mood == MoodLevel.great || e.mood == MoodLevel.good
-    ).length;
+    final positiveDays = thisWeekEntries.where((e) => e.mood.isPositive).length;
+    
+    // Dominant mood for this week
+    MoodLevel? dominantMood;
+    if (thisWeekEntries.isNotEmpty) {
+      final moodCounts = <MoodLevel, int>{};
+      for (final e in thisWeekEntries) {
+        moodCounts[e.mood] = (moodCounts[e.mood] ?? 0) + 1;
+      }
+      int maxCount = 0;
+      for (final entry in moodCounts.entries) {
+        if (entry.value > maxCount) {
+          maxCount = entry.value;
+          dominantMood = entry.key;
+        }
+      }
+    }
     
     return WeeklySummary(
       totalEntries: thisWeekEntries.length,
       averageMood: thisWeekAvg,
-      dominantMood: thisWeekEntries.isEmpty ? null : getMostCommonMood(),
+      dominantMood: dominantMood,
       streakDays: calculateStreak(),
       positiveDays: positiveDays,
       weekOverWeekChange: weekOverWeekChange,
@@ -371,14 +387,14 @@ class JournalRepository {
     
     double avg1 = 0.0;
     if (entries1.isNotEmpty) {
-      final sum = entries1.fold<int>(0, (sum, e) => sum + e.moodIndex);
-      avg1 = 4.0 - (sum / entries1.length);
+      final sum = entries1.fold<double>(0.0, (sum, e) => sum + e.mood.score);
+      avg1 = sum / entries1.length;
     }
     
     double avg2 = 0.0;
     if (entries2.isNotEmpty) {
-      final sum = entries2.fold<int>(0, (sum, e) => sum + e.moodIndex);
-      avg2 = 4.0 - (sum / entries2.length);
+      final sum = entries2.fold<double>(0.0, (sum, e) => sum + e.mood.score);
+      avg2 = sum / entries2.length;
     }
     
     return MonthlyComparison(
@@ -422,7 +438,7 @@ class JournalRepository {
       return sum + (diff * diff);
     }) / trend.length;
     
-    return variance > 0 ? (variance * 0.5) : 0.0; // sqrt approximation scaled
+    return variance > 0 ? math.sqrt(variance) : 0.0;
   }
 
   /// Get keyword frequency from notes
@@ -479,21 +495,4 @@ class JournalRepository {
     await _settingsBox.put(_settingsKey, AppSettings.defaults());
   }
 
-  // ==================== EXPORT ====================
-
-  /// Export all entries as CSV string
-  String exportToCsv() {
-    final entries = getAllEntries();
-    entries.sort((a, b) => a.dateKey.compareTo(b.dateKey));
-    
-    final buffer = StringBuffer();
-    buffer.writeln('Date,Mood,Note,Created At');
-    
-    for (final entry in entries) {
-      final note = entry.note?.replaceAll(',', ';') ?? '';
-      buffer.writeln('${entry.dateKey},${entry.mood.label},"$note",${entry.createdAt.toIso8601String()}');
-    }
-    
-    return buffer.toString();
-  }
 }

@@ -39,6 +39,10 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen>
       curve: Curves.easeOut,
     );
     _fadeController.forward();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(goalNotifierProvider.notifier).checkAndCompleteGoals();
+    });
   }
 
   @override
@@ -179,7 +183,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen>
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 350),
+        transitionDuration: const Duration(milliseconds: 240),
       ),
       (route) => false,
     );

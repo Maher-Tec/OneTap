@@ -313,19 +313,35 @@ class _MoodEmojiButtonState extends State<MoodEmojiButton>
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
+                                    horizontal: 12,
+                                    vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: widget.mood.color.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(12),
+                                    color: widget.mood.color.withValues(alpha: 0.32),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.55),
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: widget.mood.color.withValues(alpha: 0.35),
+                                        blurRadius: 12,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
                                   ),
                                   child: Text(
                                     widget.mood.label,
                                     style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: widget.mood.color,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black.withValues(alpha: 0.35),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),

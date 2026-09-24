@@ -43,6 +43,17 @@ class AchievementRepository {
     }
   }
 
+  /// Clear user progress while keeping the achievement catalog.
+  Future<void> resetProgress() async {
+    for (final achievement in _achievementsBox.values) {
+      await updateAchievement(achievement.copyWith(
+        isUnlocked: false,
+        clearUnlockedAt: true,
+        currentProgress: 0,
+      ));
+    }
+  }
+
   // ==================== CRUD ====================
 
   /// Get all achievements
@@ -114,10 +125,10 @@ class AchievementRepository {
     
     // Count mood-specific entries
     final greatDays = _entriesBox.values
-        .where((e) => e.mood == MoodLevel.great)
+        .where((e) => e.mood == MoodLevel.great || e.mood == MoodLevel.inLove)
         .length;
     final positiveDays = _entriesBox.values
-        .where((e) => e.mood == MoodLevel.great || e.mood == MoodLevel.good)
+        .where((e) => e.mood.isPositive)
         .length;
 
     // Count special entries
@@ -198,7 +209,7 @@ class AchievementRepository {
     
     if (todayEntry == null) {
       // If no entry today, start from yesterday
-      currentDate = currentDate.subtract(const Duration(days: 1));
+      currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day - 1);
     }
 
     // Count consecutive days
@@ -209,7 +220,7 @@ class AchievementRepository {
       if (entry == null) break;
       
       streak++;
-      currentDate = currentDate.subtract(const Duration(days: 1));
+      currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day - 1);
     }
 
     return streak;

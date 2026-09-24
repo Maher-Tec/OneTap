@@ -6,6 +6,7 @@ class AnimatedBackButton extends StatefulWidget {
   final Color color;
 
   const AnimatedBackButton({
+    super.key,
     required this.onTap,
     required this.color,
   });
@@ -77,6 +78,7 @@ class NavArrowButton extends StatefulWidget {
   final Color color;
 
   const NavArrowButton({
+    super.key,
     required this.icon,
     required this.onTap,
     required this.color,
@@ -122,6 +124,7 @@ class AnimatedIconButton extends StatefulWidget {
   final VoidCallback onTap;
 
   const AnimatedIconButton({
+    super.key,
     required this.icon,
     required this.color,
     required this.onTap,
@@ -195,6 +198,7 @@ class PremiumNavButton extends StatefulWidget {
   final VoidCallback onTap;
 
   const PremiumNavButton({
+    super.key,
     required this.icon,
     required this.label,
     required this.color,

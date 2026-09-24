@@ -7,7 +7,6 @@ import 'package:onetap/core/constants/mood_level.dart';
 import 'package:onetap/core/utils/haptic_utils.dart';
 
 import 'package:onetap/providers/journal_providers.dart';
-import 'package:onetap/providers/quote_provider.dart';
 
 import 'package:onetap/screens/insights_screen.dart';
 import 'package:onetap/screens/settings_screen.dart';
@@ -170,10 +169,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       children: [
                         const SizedBox(height: 16),
 
-                        // Top bar with settings
+                        // App branding and settings
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            Semantics(
+                              image: true,
+                              label: AppStrings.appName,
+                              child: Image.asset(
+                                'assets/images/logoo.png',
+                                width: 144,
+                                height: 48,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                             AnimatedIconButton(
                               icon: Icons.settings_outlined,
                               color: textColor,
@@ -286,7 +295,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               vertical: 28,
                             ),
                             child: hasEntryToday
-                                // Show Mood Galaxy and AI-generated daily quote when mood is already saved
+                                // Show mood display and a locally stored supportive message.
                                 ? Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -302,40 +311,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                       const SizedBox(height: 24),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                                        child: Consumer(
-                                          builder: (context, ref, _) {
-                                            final quoteAsync = ref.watch(aiQuoteProvider(todayEntry.mood));
-                                            return quoteAsync.when(
-                                              data: (quote) => Text(
-                                                quote,
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontStyle: FontStyle.italic,
-                                                  color: textColor.withValues(alpha: 0.8),
-                                                  height: 1.5,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                              loading: () => Text(
-                                                '✨ Generating your quote...',
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  fontStyle: FontStyle.italic,
-                                                  color: textColor.withValues(alpha: 0.5),
-                                                ),
-                                              ),
-                                              error: (_, __) => Text(
-                                                AppStrings.getDailyQuote(),
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontStyle: FontStyle.italic,
-                                                  color: textColor.withValues(alpha: 0.8),
-                                                  height: 1.5,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            );
-                                          },
+                                        child: Text(
+                                          AppStrings.getMoodMessage(todayEntry.mood.name),
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.italic,
+                                            color: textColor.withValues(alpha: 0.8),
+                                            height: 1.5,
+                                          ),
+                                          textAlign: TextAlign.center,
                                         ),
                                       ),
                                       const SizedBox(height: 16),
@@ -626,7 +610,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 child: child,
               );
             },
-            transitionDuration: const Duration(milliseconds: 400),
+            transitionDuration: const Duration(milliseconds: 240),
           ),
         ).then((_) {
           // Reset selection when returning
@@ -640,26 +624,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         });
       }
     });
-  }
-
-  void _showAlreadySavedToast(BuildContext context) {
-    HapticUtils.gentle();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.lock_outline, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Text(AppStrings.alreadySavedToast),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.black87,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        duration: const Duration(seconds: 2),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
   }
 
   String _getEmpatheticMessage(MoodLevel mood) {
@@ -697,7 +661,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 350),
+        transitionDuration: const Duration(milliseconds: 240),
       ),
     );
   }
@@ -720,7 +684,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 350),
+        transitionDuration: const Duration(milliseconds: 240),
       ),
     );
   }
@@ -743,7 +707,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 350),
+        transitionDuration: const Duration(milliseconds: 240),
       ),
     );
   }

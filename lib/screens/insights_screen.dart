@@ -14,7 +14,6 @@ import 'package:onetap/widgets/floating_particles.dart';
 import 'package:onetap/widgets/animated_gradient_background.dart';
 import 'package:onetap/widgets/shared_buttons.dart';
 import 'package:onetap/screens/home_screen.dart';
-import 'package:onetap/services/ai_service.dart';
 
 /// Premium insights screen with mood statistics
 class InsightsScreen extends ConsumerStatefulWidget {
@@ -60,7 +59,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen>
     final totalEntries = ref.watch(totalEntriesProvider);
     final distribution = ref.watch(moodDistributionProvider(_currentMonth));
     final mostCommon = ref.watch(mostCommonMoodProvider(_currentMonth));
-    final positiveDays = ref.watch(positiveDaysProvider(null));
+    final positiveDays = ref.watch(positiveDaysProvider(_currentMonth));
     final daysInMonth = app_date.DateUtils.daysInMonth(
       _currentMonth.year,
       _currentMonth.month,
@@ -427,7 +426,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen>
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 350),
+        transitionDuration: const Duration(milliseconds: 240),
       ),
       (route) => false,
     );
@@ -1101,40 +1100,13 @@ class _DayOfWeekSection extends ConsumerWidget {
           const Text('✨', style: TextStyle(fontSize: 16)),
           const SizedBox(width: 8),
           Flexible(
-            child: FutureBuilder<String>(
-              future: AiService().generateDayInsight(best.fullDayName, best.averageMood),
-              builder: (context, snapshot) {
-                // Default static fallback while loading or if error
-                final fallbackText = '${best.fullDayName}s are your happiest days!';
-                
-                if (snapshot.hasData) {
-                  return AnimatedOpacity(
-                    opacity: 1.0,
-                    duration: const Duration(milliseconds: 500),
-                    child: Text(
-                      snapshot.data!,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: textColor.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  );
-                }
-                
-                // Show fallback/loading text
-                return Text(
-                  snapshot.connectionState == ConnectionState.waiting 
-                      ? 'Analyzing ${best.fullDayName}s...' 
-                      : fallbackText,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: textColor.withValues(alpha: 0.7),
-                    fontStyle: snapshot.connectionState == ConnectionState.waiting ? FontStyle.italic : FontStyle.normal,
-                  ),
-                );
-              },
+            child: Text(
+              AppStrings.getBestDayMessage(best.fullDayName, best.averageMood),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: textColor.withValues(alpha: 0.7),
+              ),
             ),
           ),
         ],

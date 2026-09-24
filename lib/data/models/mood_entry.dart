@@ -30,7 +30,9 @@ class MoodEntry extends HiveObject {
   });
 
   /// Get the MoodLevel enum from the stored index
-  MoodLevel get mood => MoodLevel.values[moodIndex];
+  MoodLevel get mood => moodIndex >= 0 && moodIndex < MoodLevel.values.length
+      ? MoodLevel.values[moodIndex]
+      : MoodLevel.okay;
 
   /// Create a MoodEntry with a MoodLevel
   factory MoodEntry.create({

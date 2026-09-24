@@ -105,6 +105,30 @@ extension MoodLevelExtension on MoodLevel {
     }
   }
 
+  /// Numeric score for statistics (0.0 to 4.0 scale)
+  double get score {
+    switch (this) {
+      case MoodLevel.great:
+      case MoodLevel.inLove:
+        return 4.0;
+      case MoodLevel.good:
+        return 3.0;
+      case MoodLevel.okay:
+        return 2.0;
+      case MoodLevel.meh:
+        return 1.0;
+      case MoodLevel.bad:
+        return 0.0;
+    }
+  }
+
+  /// Whether this mood is considered positive (great, good, or in love)
+  bool get isPositive {
+    return this == MoodLevel.great ||
+        this == MoodLevel.good ||
+        this == MoodLevel.inLove;
+  }
+
   /// Haptic weight for this mood (used for haptic feedback intensity)
   /// Higher = heavier haptic
   int get hapticWeight {

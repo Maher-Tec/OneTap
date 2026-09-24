@@ -30,7 +30,12 @@ class GlassmorphicCard extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        // Large backdrop blurs are expensive when several cards share a screen.
+        // Keep the frosted look while capping the cost on slower devices.
+        filter: ImageFilter.blur(
+          sigmaX: blur.clamp(0.0, 4.0).toDouble(),
+          sigmaY: blur.clamp(0.0, 4.0).toDouble(),
+        ),
         child: Container(
           decoration: BoxDecoration(
             color: bgColor,
