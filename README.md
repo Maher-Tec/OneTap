@@ -8,13 +8,12 @@
   <p>
     <a href="https://flutter.dev"><img alt="Built with Flutter" src="https://img.shields.io/badge/Built%20with-Flutter-02569B?logo=flutter&logoColor=white"></a>
     <a href="https://github.com/Maher-Tec/OneTap"><img alt="GitHub repository" src="https://img.shields.io/badge/GitHub-OneTap-181717?logo=github"></a>
+    <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
     <img alt="Dart SDK" src="https://img.shields.io/badge/Dart-%5E3.10.3-0175C2?logo=dart&logoColor=white">
   </p>
 </div>
 
 OneTap is a personal mood-tracking app. It keeps entries on the device and provides calendar history, charts, streaks, goals, and achievements. The project is built with Flutter and uses Riverpod for app state and Hive for local persistence.
-
-> **Open-source release note:** The previous README referenced an MIT license, but this repository currently has no `LICENSE` file. Add the chosen license and copyright holder before distributing the project as open source. Until then, the repository has no explicit reuse license.
 
 ## Contents
 
@@ -188,16 +187,13 @@ flutter analyze
 
 Contributions are welcome. Before opening a pull request:
 
-1. Check existing issues and avoid including unrelated changes.
-2. Keep changes focused and follow the existing Dart/Flutter structure.
-3. Run `dart format .`, `flutter analyze`, and relevant tests.
-4. Describe the change and include screenshots for UI updates.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup, code style, and pull request guidance.
 
-For substantial changes, open an issue first to discuss the proposed behavior. Please do not include real journal data, credentials, or private user information in issues, screenshots, or pull requests.
+Please do not include real journal data, credentials, or private user information in issues, screenshots, or pull requests.
 
 ## License
 
-**License not yet specified.** The old README claimed MIT, but no `LICENSE` file is present in the repository. Add the license text and update this section before publishing or accepting contributions under an open-source license. Choose a license and include the correct copyright holder.
+This project is licensed under the [MIT License](LICENSE). You may use, modify, and distribute it under the terms of that license.
 
 ## Acknowledgements
 
